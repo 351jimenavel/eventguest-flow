@@ -38,6 +38,7 @@ def create_guest():
 
     # Calcular expiracion del token (evento + 1 dia)
     expires_at = event_date + timedelta(days=1)
+    token_expires_at = expires_at.strftime("%Y-%m-%d %H:%M:%S") #Convertir de nuevo a string ya que SQLite guarda fechas como texto
     
     # Generar token
     token = secrets.token_urlsafe(16)
@@ -59,7 +60,7 @@ def create_guest():
             (nombre_completo, telefono, tipo, genero, estado ,token, token_expires_at) 
             VALUES (?,?,?,?, 'INVITADO',?,?)
             ''', 
-            (nombre_completo, telefono, tipo, genero, token, expires_at)
+            (nombre_completo, telefono, tipo, genero, token, token_expires_at)
             )
         conn.commit()
 
