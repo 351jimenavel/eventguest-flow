@@ -42,6 +42,12 @@ def create_guest():
     for campo in campos_obligatorios:
         if campo not in data or not data[campo]:
             return jsonify({"error": f"campo {campo} es obligatorio"}), 400
+        
+    # Normalizar valores (solo despues de validar)
+    nombre_completo = data["nombre_completo"].strip().lower()
+    telefono = data["telefono"].strip()
+    tipo = data["tipo"].strip().upper()
+    genero = data["genero"].strip().upper()
 
     # Calcular expiracion del token (evento + 1 dia)
     expires_at = event_date + timedelta(days=1)
