@@ -36,6 +36,13 @@ def create_guest():
     tipo = data.get("tipo")
     genero = data.get("genero")
 
+    # Verificar campos obligatorios
+    campos_obligatorios = ["nombre_completo", "telefono", "tipo", "genero"]
+
+    for campo in campos_obligatorios:
+        if campo not in data or not data[campo]:
+            return jsonify({"error": f"campo {campo} es obligatorio"}), 400
+
     # Calcular expiracion del token (evento + 1 dia)
     expires_at = event_date + timedelta(days=1)
     token_expires_at = expires_at.strftime("%Y-%m-%d %H:%M:%S") #Convertir de nuevo a string ya que SQLite guarda fechas como texto
