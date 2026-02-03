@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmacion</title>
+</head>
+<body>
+    {% if token %}
+        {% if stage %}
+            <h1> Hola {{ invitado }}</h1>
+            <h2> ¿Podés venir al evento? </h2>
+                {% if stage == "save" %}
+                    <ul>
+                    {% for answer in answers %}
+                        <button>{{ answer }}</button>
+                    {% endfor %}
+                    </ul>
+                {% elif stage == "final" %}
+                    <ul>
+                    {% for answer in answers %}
+                        <button>{{ answer }}</button>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <h1> {{ error }} </h1>
+                {% endif %}
+        {% else %}
+            <h1> {{ error }} </h1>    
+        {% endif %}
+
+    {% else %}
+        <h1> {{ error_token }} </h1>    
+    {% endif %}
+</body>
+</html>
