@@ -49,6 +49,13 @@ def create_guest():
     tipo = data["tipo"].strip().upper()
     genero = data["genero"].strip().upper()
 
+    # Validar valores permitidos
+    if tipo not in {"JOVEN", "ADULTO"}:
+        return jsonify({"error": "Tipo inválido. Use JOVEN o ADULTO"}), 400
+    
+    if genero not in {"MASC", "FEM"}:
+        return jsonify({"error": "Género inválido. Use MASC o FEM"}), 400
+
     # Calcular expiracion del token (evento + 1 dia)
     expires_at = event_date + timedelta(days=1)
     token_expires_at = expires_at.strftime("%Y-%m-%d %H:%M:%S") #Convertir de nuevo a string ya que SQLite guarda fechas como texto
