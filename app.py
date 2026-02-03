@@ -87,5 +87,22 @@ def create_guest():
     # Respuesta de exito
     return jsonify({"message":"Invitado creado correctamente", "token": token}), 201
 
+@app.route("/admin/guests", methods=["GET"])
+def get_guests():
+
+    query = "SELECT * FROM guests ORDER BY id DESC"
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row       # row_factory permite convertir filas a dict facilmente.
+        cur  = conn.execute(query)
+        rows = cur.fetchall()
+
+    # Serializamos filas a lista de dicts apta para jsonify
+    response = []
+    for r in rows:
+        response.append(dict(r))
+    
+    return jsonify({"data": response}), 200
+
 if __name__ == "__main__":
     app.run(debug=True, port=6789)
