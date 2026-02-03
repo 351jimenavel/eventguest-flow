@@ -1,11 +1,70 @@
 from flask import Flask, jsonify, request
+import os
+import sqlite3
+from dotenv import load_dotenv
+from pathlib import Path
+import secrets
+from datetime import datetime, timedelta
 
+load_dotenv()
 app = Flask(__name__)
+
+event_date_str = os.getenv("EVENT_DATE")
+event_date = datetime.strptime(event_date_str, "%Y-%m-%d %H:%M:%S")
+
+DB_PATH = os.getenv("GUESTS_DB_PATH")
+
+def get_conn():
+    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 @app.route("/")
 def check_health():
     return jsonify({"message":"Ok"}), 200
 
+
+@app.route("/admin/guests", methods=["POST",])
+def create_guest():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error":"formato invalido"}), 400
+
+    nombre_completo = data.get("nombre_completo")
+    telefono = data.get("telefono")
+    tipo = data.get("tipo")
+    genero = data.get("genero")
+
+    # Calcular expiracion del token (evento + 1 dia)
+    expires_at = event_date + timedelta(days=1)
+    
+    # Generar token
+    token = secrets.token_urlsafe(16)
+
+    # Insertar en DB
+    with get_conn() as conn:
+
+        # Verificar duplicado por telefono
+        cur = conn.execute("""SELECT id from guests WHERE telefono = ?
+        """, (telefono,))
+        row = cur.fetchone()
+        # si telefono ya existe -> 409
+        if row:
+            return jsonify({"error":"el invitado ya existe"}), 409 # Conflict
+
+        cur = conn.execute(
+            '''
+            INSERT INTO guests 
+            (nombre_completo, telefono, tipo, genero, estado ,token, token_expires_at) 
+            VALUES (?,?,?,?, 'INVITADO',?,?)
+            ''', 
+            (nombre_completo, telefono, tipo, genero, token, expires_at)
+            )
+        conn.commit()
+
+    # Respuesta de exito
+    return jsonify({"message":"Invitado creado correctamente", "token": token}), 201
 
 if __name__ == "__main__":
     app.run(debug=True, port=6789)
