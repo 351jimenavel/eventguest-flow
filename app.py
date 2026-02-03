@@ -100,10 +100,12 @@ def get_guests():
     parametros = []
 
     if tipo:
+        tipo = tipo.strip().upper()
         condiciones.append("tipo = ?")
         parametros.append(tipo)
 
     if genero:
+        genero = genero.strip().upper()
         condiciones.append("genero = ?")
         parametros.append(genero)
 
