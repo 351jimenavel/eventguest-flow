@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import os
 import sqlite3
 from dotenv import load_dotenv
 from pathlib import Path
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 load_dotenv()
 app = Flask(__name__)
@@ -125,6 +125,43 @@ def get_guests():
         response.append(dict(r))
     
     return jsonify({"data": response}), 200
+
+@app.route("/confirm/<token>")
+def confirmar_asistencia(token):
+
+    #armar query params
+    args = request.args
+    stage = args.get("stage")
+
+    if stage not in {"save", "final"}:
+        return render_template("index.html", error="Link inválido")
+
+    with get_conn() as conn:
+        cur = conn.execute("""SELECT nombre_completo, token_expires_at from guests WHERE token = ?
+        """, (token,))
+        resultado = cur.fetchone()
+        
+        # Recuperar nombre del invitado
+        if not resultado:
+            # Si no se encuentra en DB entonces no existe el token
+            return render_template('index.html', error_token = "Link invalido")
+
+        nombre = resultado["nombre_completo"]
+
+        token_expires_at_str = resultado["token_expires_at"]
+        if token_expires_at_str:
+            token_expires_at = datetime.strptime(token_expires_at_str, "%Y-%m-%d %H:%M:%S")
+            if token_expires_at < datetime.now():
+                return render_template('index.html', error_vencido = "Este link ya venció. Contactá a la anfitriona.")
+        
+    # para Save
+    if stage == "save":
+        respuestas_validas = ["maybe_yes", "doubt", "maybe_no"]
+    # para final
+    else: # stage == "final"
+        respuestas_validas = ["yes", "no"]
+    
+    return render_template('index.html', stage=stage ,invitado=nombre, answers=respuestas_validas, token=token)
 
 if __name__ == "__main__":
     app.run(debug=True, port=6789)
