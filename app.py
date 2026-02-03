@@ -90,11 +90,31 @@ def create_guest():
 @app.route("/admin/guests", methods=["GET"])
 def get_guests():
 
-    query = "SELECT * FROM guests ORDER BY id DESC"
+    args =  request.args
+
+    tipo = args.get("tipo")
+    genero = args.get("genero")
+
+    query = "SELECT * FROM guests WHERE 1=1"
+    condiciones = []
+    parametros = []
+
+    if tipo:
+        condiciones.append("tipo = ?")
+        parametros.append(tipo)
+
+    if genero:
+        condiciones.append("genero = ?")
+        parametros.append(genero)
+
+    if condiciones:
+        query += " AND " + " AND ".join(condiciones)
+    
+    query += " ORDER BY id DESC"
 
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row       # row_factory permite convertir filas a dict facilmente.
-        cur  = conn.execute(query)
+        cur  = conn.execute(query, parametros)
         rows = cur.fetchall()
 
     # Serializamos filas a lista de dicts apta para jsonify
