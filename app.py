@@ -163,5 +163,71 @@ def confirmar_asistencia(token):
     
     return render_template('index.html', stage=stage ,invitado=nombre, answers=respuestas_validas, token=token)
 
+@app.route("/confirm/<token>", methods=["POST",])
+def leer_botones(token):
+
+    # leer inputs del form
+    stage = request.form.get("stage")
+    respuesta = request.form.get('answer')
+
+    if not stage or not respuesta:
+        return render_template("index.html", error="Solicitud inválida")
+    
+    if stage not in {"save", "final"}:
+        return render_template("index.html", error="Solicitud inválida")
+
+    # para Save
+    if stage == "save":
+        if respuesta not in {"maybe_yes", "doubt", "maybe_no"}:
+            return render_template("index.html", error="Solicitud inválida")
+    # para stage == "final"
+    else:
+        if respuesta not in {"yes", "no"}:
+            return render_template("index.html", error="Solicitud inválida")
+
+    with get_conn() as conn:
+        cur = conn.execute("""SELECT nombre_completo, estado, token_expires_at from guests WHERE token = ?
+        """, (token,))
+        resultado = cur.fetchone()
+        
+        # Recuperar nombre del invitado
+        if not resultado:
+            # Si no se encuentra en DB entonces no existe el token
+            return render_template('index.html', error_token = "Link invalido")
+
+        nombre = resultado["nombre_completo"]
+
+        token_expires_at_str = resultado["token_expires_at"]
+        if token_expires_at_str:
+            token_expires_at = datetime.strptime(token_expires_at_str, "%Y-%m-%d %H:%M:%S")
+            if token_expires_at < datetime.now():
+                return render_template('index.html', error_vencido = "Este link ya venció. Contactá a la anfitriona.")
+        
+        estado = resultado["estado"]
+        if estado in {"CONFIRMADO", "NO_ASISTE"} and stage == "save":
+            return render_template('thanks.html', invitado=nombre)
+
+        if stage == "save":
+            if respuesta in {"maybe_yes", "doubt"}:
+                nuevo_estado = "PRECONFIRMADO"
+            else:
+                nuevo_estado = "NO_ASISTE"
+
+        # stage == "final":
+        else:
+            if respuesta == "yes":
+                nuevo_estado = "CONFIRMADO"
+            else:
+                nuevo_estado = "NO_ASISTE"
+
+        # actualizar DB
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cur = conn.execute("""UPDATE guests SET estado = ?, updated_at = ? WHERE token = ?
+        """, (nuevo_estado, now, token))
+        conn.commit()
+
+    # exito
+    return render_template('thanks.html',invitado=nombre)
+
 if __name__ == "__main__":
     app.run(debug=True, port=6789)
