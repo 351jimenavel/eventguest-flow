@@ -1,36 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmacion</title>
+    <title>Confirmación</title>
 </head>
 <body>
-    {% if token %}
-        {% if stage %}
-            <h1> Hola {{ invitado }}</h1>
-            <h2> ¿Podés venir al evento? </h2>
-                {% if stage == "save" %}
-                    <ul>
-                    {% for answer in answers %}
-                        <button>{{ answer }}</button>
-                    {% endfor %}
-                    </ul>
-                {% elif stage == "final" %}
-                    <ul>
-                    {% for answer in answers %}
-                        <button>{{ answer }}</button>
-                    {% endfor %}
-                    </ul>
-                {% else %}
-                    <h1> {{ error }} </h1>
-                {% endif %}
-        {% else %}
-            <h1> {{ error }} </h1>    
+    {% if error_token %}
+        <h1> {{ error_token }}</h1>
+
+    {% elif error_vencido %}
+        <h1> {{ error_vencido }}</h1>
+
+    {% elif error %}
+    <h1> {{ error }}</h1>
+    
+    {% else %}
+        <h1> Hola {{ invitado }}</h1>
+        {% if stage == "save" %}
+            <h2> Save the date: ¿podés venir al evento? </h2>
+        {% elif stage == "final" %}
+            <h2> Confirmación final: ¿vas a asistir? </h2>
         {% endif %}
 
-    {% else %}
-        <h1> {{ error_token }} </h1>    
+        <ul>
+            {% for answer in answers %}
+                <li><button type="button">{{ answer }}</button></li>
+            {% endfor %}
+        </ul>
     {% endif %}
 </body>
 </html>
