@@ -4,7 +4,7 @@ import sqlite3
 from dotenv import load_dotenv
 from pathlib import Path
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 load_dotenv()
 app = Flask(__name__)
@@ -53,7 +53,7 @@ def create_guest():
     if tipo not in {"JOVEN", "ADULTO"}:
         return jsonify({"error": "Tipo inválido. Use JOVEN o ADULTO"}), 400
     
-    if genero not in {"MASC", "FEM"}:
+    if genero not in {"MASC", "FEM", "NO_ESPECIFICADO"}:
         return jsonify({"error": "Género inválido. Use MASC o FEM"}), 400
 
     # Calcular expiracion del token (evento + 1 dia)
