@@ -17,6 +17,7 @@
     
     {% else %}
         <h1> Hola {{ invitado }}</h1>
+
         {% if stage == "save" %}
             <h2> Save the date: ¿podés venir al evento? </h2>
         {% elif stage == "final" %}
@@ -25,7 +26,14 @@
 
         <ul>
             {% for answer in answers %}
-                <li><button type="button">{{ answer }}</button></li>
+                <li>
+                    <form method="POST" action="/confirm/{{ token }}">
+                        <input type="hidden" name="stage" value="{{ stage }}">
+                        <button type="submit" name="answer" value="{{ answer }}">
+                            {{ answer }}
+                        </button>
+                    </form>
+                </li>
             {% endfor %}
         </ul>
     {% endif %}
